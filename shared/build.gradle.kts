@@ -5,7 +5,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.kotlinSerialization)
-    // SQLDelight kommt in 04-platform
+    alias(libs.plugins.sqldelight)
 }
 
 kotlin {
@@ -39,15 +39,18 @@ kotlin {
             // für alle Targets ist — kein reiner Test-Helper
             implementation(libs.ktor.client.mock)
             implementation(libs.koin.core)
+            implementation(libs.sqldelight.coroutines.extensions)
         }
 
         androidMain.dependencies {
             implementation(libs.ktor.client.android)
             implementation(libs.kotlinx.coroutines.android)
+            implementation(libs.sqldelight.android.driver)
         }
 
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+            implementation(libs.sqldelight.native.driver)
         }
 
         commonTest.dependencies {
@@ -66,5 +69,13 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
+sqldelight {
+    databases {
+        create("WorkshopDatabase") {
+            packageName.set("com.workshop.kmp.db")
+        }
     }
 }
