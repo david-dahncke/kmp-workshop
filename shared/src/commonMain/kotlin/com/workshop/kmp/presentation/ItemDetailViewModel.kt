@@ -1,7 +1,6 @@
 package com.workshop.kmp.presentation
 
 import com.workshop.kmp.domain.usecases.GetItemDetailUseCase
-import com.workshop.kmp.domain.usecases.ToggleFavoriteUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -12,7 +11,7 @@ import kotlinx.coroutines.launch
 
 class ItemDetailViewModel(
     private val getItemDetailUseCase: GetItemDetailUseCase,
-    private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
+    // TODO (Übung 2): ToggleFavoriteUseCase-Parameter ergänzen
 ) {
     private val viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
@@ -33,13 +32,6 @@ class ItemDetailViewModel(
     }
 
     fun toggleFavorite(itemId: String) {
-        viewModelScope.launch {
-            try {
-                toggleFavoriteUseCase(itemId)
-                loadItem(itemId)
-            } catch (e: Exception) {
-                _state.value = ItemDetailState.Error(e.message ?: "Favorit konnte nicht gespeichert werden")
-            }
-        }
+        // TODO (Übung 2): Use Case aufrufen und danach loadItem(itemId) triggern
     }
 }
