@@ -11,9 +11,8 @@ fun ItemDto.toDomain(isFavorite: Boolean = false): Item = Item(
     id = id,
     title = title,
     shortDescription = shortDescription,
-    // WORKSHOP-BUG: Force-Unwrap auf einem nullable Feld — crasht sobald ein Item price=null hat.
-    // Fix: price ?: 0.0  oder  price ?: throw IllegalStateException("Preis fehlt für Item $id")
-    price = price!!,
+    // Bug aus Übung 1 gefixt: explizite Exception statt NPE, landet sauber im Error State.
+    price = price ?: throw IllegalStateException("Kein Preis für Item '$id' — Backend-Daten prüfen"),
     imageUrl = imageUrl,
     longDescription = longDescription,
     isFavorite = isFavorite,
