@@ -4,26 +4,29 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.workshop.kmp.domain.Item
-import com.workshop.kmp.domain.createItemRepository
+import com.workshop.kmp.presentation.ItemListState
+import com.workshop.kmp.presentation.ItemListViewModel
+import org.koin.compose.koinInject
 
-// TODO (03-state): Screen mit echtem ViewModel und StateFlow verbinden.
-// Hier: Repository direkt im Composable nutzen (kein ViewModel, kein DI).
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ItemListScreen(onItemClick: (String) -> Unit = {}) {
-    val repository = remember { createItemRepository() }
-    var items by remember { mutableStateOf<List<Item>>(emptyList()) }
-
-    LaunchedEffect(Unit) {
-        // Kein try-catch — wirft NullPointerException wenn price=null (Bug 7.1)
-        items = repository.getItems()
-    }
+fun ItemListScreen(
+    onItemClick: (String) -> Unit,
+    viewModel: ItemListViewModel = koinInject(),
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -36,41 +39,62 @@ fun ItemListScreen(onItemClick: (String) -> Unit = {}) {
             )
         }
     ) { padding ->
-        if (items.isEmpty()) {
-            Box(
+        when (val s = state) {
+            is ItemListState.Loading -> Box(
                 modifier = Modifier.fillMaxSize().padding(padding),
                 contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator()
-            }
-        } else {
-            LazyColumn(
+            ) { CircularProgressIndicator() }
+
+            is ItemListState.Success -> LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(padding),
                 contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                items(items) { item ->
-                    ItemCard(item = item, onClick = { onItemClick(item.id) })
+                items(s.items, key = { it.id }) { item ->
+                    ItemCard(
+                        item = item,
+                        onItemClick = { onItemClick(item.id) },
+                        onFavoriteClick = { viewModel.toggleFavorite(item.id) },
+                    )
                 }
+            }
+
+            is ItemListState.Error -> Column(
+                modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text("Fehler beim Laden", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.error)
+                Spacer(Modifier.height(8.dp))
+                Text(s.message, style = MaterialTheme.typography.bodyMedium)
+                Spacer(Modifier.height(16.dp))
+                Button(onClick = { viewModel.loadItems() }) { Text("Erneut versuchen") }
             }
         }
     }
 }
 
 @Composable
-private fun ItemCard(item: Item, onClick: () -> Unit) {
+private fun ItemCard(item: Item, onItemClick: () -> Unit, onFavoriteClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onItemClick),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(item.title, style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(4.dp))
-            Text(item.shortDescription, style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.height(8.dp))
-            Text("€ %.2f".format(item.price), style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary)
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(item.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Spacer(Modifier.height(4.dp))
+                Text(item.shortDescription, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Spacer(Modifier.height(8.dp))
+                Text("€ %.2f".format(item.price), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+            }
+            IconButton(onClick = onFavoriteClick) {
+                Icon(
+                    imageVector = if (item.isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                    contentDescription = if (item.isFavorite) "Favorit entfernen" else "Als Favorit markieren",
+                    tint = if (item.isFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
