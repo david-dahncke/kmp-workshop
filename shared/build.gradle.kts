@@ -38,6 +38,7 @@ kotlin {
             // MockEngine liegt in commonMain, weil er im Workshop der "Fake-Server"
             // für alle Targets ist — kein reiner Test-Helper
             implementation(libs.ktor.client.mock)
+            implementation(libs.koin.core)
         }
 
         androidMain.dependencies {
