@@ -1,0 +1,15 @@
+CREATE TABLE FavoriteItem (
+    item_id TEXT NOT NULL PRIMARY KEY
+);
+
+selectAll:
+SELECT item_id FROM FavoriteItem;
+
+insert:
+INSERT OR REPLACE INTO FavoriteItem(item_id) VALUES (?);
+
+delete:
+DELETE FROM FavoriteItem WHERE item_id = ?;
+
+isFavorite:
+SELECT COUNT(*) > 0 FROM FavoriteItem WHERE item_id = ?;
