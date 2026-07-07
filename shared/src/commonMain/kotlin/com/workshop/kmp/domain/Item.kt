@@ -11,5 +11,6 @@ data class Item(
     val price: Double,
     val imageUrl: String,
     val longDescription: String,
+    val sku: String,
     val isFavorite: Boolean = false,
 )

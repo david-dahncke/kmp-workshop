@@ -11,11 +11,12 @@ fun ItemDto.toDomain(isFavorite: Boolean = false): Item = Item(
     id = id,
     title = title,
     shortDescription = shortDescription,
-    // WORKSHOP-BUG: Force-Unwrap auf einem nullable Feld — crasht sobald ein Item price=null hat.
-    // Fix: price ?: 0.0  oder  price ?: throw IllegalStateException("Preis fehlt für Item $id")
-    price = price!!,
+    // Bug 7.1 gefixt: price!! → sicherer Fallback. App crasht nicht mehr bei price: null.
+    price = price ?: 0.0,
     imageUrl = imageUrl,
     longDescription = longDescription,
+    // Bug 7.2 gefixt: DTO-Feldname bleibt im Mapper — Domain-Feld heißt neutral "sku".
+    sku = dtoInternalSku,
     isFavorite = isFavorite,
 )
 

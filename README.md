@@ -60,8 +60,8 @@ Jeder Branch ist ein eigenständiger, inkrementeller Schritt:
 | `02-repository` | + Repository + Ktor MockEngine (**Bug eingebaut!**) |
 | `03-state` | + Use Cases + ScreenState + vollständige UI |
 | `04-platform` | + `expect/actual` + Logger + Koin + SQLDelight (**2. Bug!**) |
-| `05-tests` | + Alle commonTests grün, Bugs gefixt — **Referenzlösung** |
-| `06-favorit-uebung` | Vorlage Übung 2 (Favoriten unvollständig) |
+| `05-tests` | + Alle commonTests grün, beide Bugs gefixt — **Referenzlösung** |
+| `06-favorit-uebung` | Baut auf `05-tests` auf — App funktioniert, Favoriten-Feature absichtlich unvollständig |
 
 ```bash
 # Zu einem bestimmten Stand wechseln:

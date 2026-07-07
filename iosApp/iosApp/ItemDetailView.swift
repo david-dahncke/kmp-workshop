@@ -42,7 +42,7 @@ struct ItemDetailContent: View {
                     }
                     Text(String(format: "€ %.2f", item.price)).font(.title3).foregroundColor(.accentColor)
                     // Anti-Pattern 7.2: "dto_internal_sku" als Label direkt in der UI
-                    Text("SKU: dto_internal_sku").font(.caption).foregroundColor(.secondary)
+                    Text("SKU: \(item.sku)").font(.caption).foregroundColor(.secondary)
                     Divider()
                     Text(item.shortDescription).font(.body).foregroundColor(.secondary)
                     Text(item.longDescription).font(.body)

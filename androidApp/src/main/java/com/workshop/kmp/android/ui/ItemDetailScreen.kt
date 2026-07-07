@@ -64,9 +64,6 @@ fun ItemDetailScreen(
 private fun ItemDetailContent(item: Item, onFavoriteClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         // WORKSHOP-BUG (Anti-Pattern 7.2): Direkter Zugriff auf ein DTO-Feld aus der UI.
-        // Der "dto_internal_sku"-Name verrät, dass hier eine Schicht übersprungen wurde.
-        // Fix: Item.sku: String im Domain-Modell ergänzen, im Mapper befüllen, hier item.sku nutzen.
-        val dto_internal_sku = "SKU-DISPLAY-BYPASS"
 
         Box(modifier = Modifier.fillMaxWidth().height(220.dp).padding(0.dp)) {
             // Bild-Placeholder (ohne Coil auf diesem Branch, kommt ggf. in 04-platform)
@@ -92,7 +89,7 @@ private fun ItemDetailContent(item: Item, onFavoriteClick: () -> Unit, modifier:
             Text("€ %.2f".format(item.price), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(4.dp))
             // Anti-Pattern sichtbar: Backend-interner Feldname landet in der UI
-            Text("SKU: $dto_internal_sku", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+            Text("SKU: ${item.sku}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
             Text(item.shortDescription, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(16.dp))
