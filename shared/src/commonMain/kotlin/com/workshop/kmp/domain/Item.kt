@@ -1,7 +1,15 @@
 package com.workshop.kmp.domain
 
-// TODO (01-model): Domain-Modell mit allen Feldern implementieren.
+/**
+ * Domain-Modell für einen Artikel.
+ * Plattformunabhängig — darf KEIN DTO-Feld direkt enthalten.
+ */
 data class Item(
     val id: String,
     val title: String,
+    val shortDescription: String,
+    val price: Double,
+    val imageUrl: String,
+    val longDescription: String,
+    val isFavorite: Boolean = false,
 )
