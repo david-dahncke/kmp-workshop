@@ -1,5 +1,6 @@
 package com.workshop.kmp.android.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -13,12 +14,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.workshop.kmp.android.ui.preview.SampleData
+import com.workshop.kmp.android.ui.theme.WorkshopTheme
 import com.workshop.kmp.domain.Item
 import com.workshop.kmp.presentation.ItemDetailState
 import com.workshop.kmp.presentation.ItemDetailViewModel
 import org.koin.compose.koinInject
+
+// ── Stateful Screen ────────────────────────────────────────────────────────────
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,9 +34,23 @@ fun ItemDetailScreen(
     viewModel: ItemDetailViewModel = koinInject(),
 ) {
     LaunchedEffect(itemId) { viewModel.loadItem(itemId) }
-
     val state by viewModel.state.collectAsStateWithLifecycle()
+    ItemDetailScaffold(
+        state = state,
+        onBack = onBack,
+        onFavoriteClick = { id -> viewModel.toggleFavorite(id) },
+    )
+}
 
+// ── Stateless Scaffold (previewbar) ───────────────────────────────────────────
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun ItemDetailScaffold(
+    state: ItemDetailState,
+    onBack: () -> Unit,
+    onFavoriteClick: (String) -> Unit,
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -49,24 +69,31 @@ fun ItemDetailScreen(
         }
     ) { padding ->
         when (val s = state) {
-            is ItemDetailState.Loading -> Box(Modifier.fillMaxSize().padding(padding), Alignment.Center) { CircularProgressIndicator() }
-            is ItemDetailState.Success -> ItemDetailContent(s.item, { viewModel.toggleFavorite(s.item.id) }, Modifier.padding(padding))
-            is ItemDetailState.Error -> Column(Modifier.fillMaxSize().padding(padding).padding(24.dp), Alignment.CenterHorizontally, Arrangement.Center) {
-                Text("Fehler", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.error)
-                Spacer(Modifier.height(8.dp))
-                Text(s.message)
-            }
+            is ItemDetailState.Loading ->
+                Box(Modifier.fillMaxSize().padding(padding), Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            is ItemDetailState.Success ->
+                ItemDetailContent(s.item, { onFavoriteClick(s.item.id) }, Modifier.padding(padding))
+            is ItemDetailState.Error ->
+                Column(
+                    modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text("Fehler", style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.error)
+                    Spacer(Modifier.height(8.dp))
+                    Text(s.message)
+                }
         }
     }
 }
 
 @Composable
-private fun ItemDetailContent(item: Item, onFavoriteClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun ItemDetailContent(item: Item, onFavoriteClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        // WORKSHOP-BUG (Anti-Pattern 7.2): Direkter Zugriff auf ein DTO-Feld aus der UI.
-
-        Box(modifier = Modifier.fillMaxWidth().height(220.dp).padding(0.dp)) {
-            // Bild-Placeholder (ohne Coil auf diesem Branch, kommt ggf. in 04-platform)
+        Box(modifier = Modifier.fillMaxWidth().height(220.dp)) {
             Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surfaceVariant) {
                 Box(contentAlignment = Alignment.Center) {
                     Text("🖼", style = MaterialTheme.typography.displayMedium)
@@ -76,24 +103,87 @@ private fun ItemDetailContent(item: Item, onFavoriteClick: () -> Unit, modifier:
 
         Column(modifier = Modifier.padding(20.dp)) {
             Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-                Text(item.title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
+                Text(item.title, style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.weight(1f))
                 IconButton(onClick = onFavoriteClick) {
                     Icon(
                         if (item.isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                         contentDescription = null,
-                        tint = if (item.isFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                        tint = if (item.isFavorite) MaterialTheme.colorScheme.error
+                               else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
             Spacer(Modifier.height(4.dp))
-            Text("€ %.2f".format(item.price), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+            Text("€ %.2f".format(item.price), style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(4.dp))
-            // Anti-Pattern sichtbar: Backend-interner Feldname landet in der UI
-            Text("SKU: ${item.sku}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+            Text("SKU: ${item.sku}", style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.outline)
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-            Text(item.shortDescription, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(item.shortDescription, style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(16.dp))
             Text(item.longDescription, style = MaterialTheme.typography.bodyMedium)
         }
+    }
+}
+
+// ── Previews ──────────────────────────────────────────────────────────────────
+
+@Preview(name = "Detail — Laden", showBackground = true)
+@Composable
+private fun ItemDetailLoadingPreview() {
+    WorkshopTheme {
+        ItemDetailScaffold(ItemDetailState.Loading, onBack = {}, onFavoriteClick = {})
+    }
+}
+
+@Preview(name = "Detail — Erfolg", showBackground = true)
+@Composable
+private fun ItemDetailSuccessPreview() {
+    WorkshopTheme {
+        ItemDetailScaffold(
+            state = ItemDetailState.Success(SampleData.singleItem),
+            onBack = {},
+            onFavoriteClick = {},
+        )
+    }
+}
+
+@Preview(name = "Detail — Favorit", showBackground = true)
+@Composable
+private fun ItemDetailFavoritePreview() {
+    WorkshopTheme {
+        ItemDetailScaffold(
+            state = ItemDetailState.Success(SampleData.favoriteItem),
+            onBack = {},
+            onFavoriteClick = {},
+        )
+    }
+}
+
+@Preview(name = "Detail — Dark Mode", showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ItemDetailDarkPreview() {
+    WorkshopTheme {
+        ItemDetailScaffold(
+            state = ItemDetailState.Success(SampleData.singleItem),
+            onBack = {},
+            onFavoriteClick = {},
+        )
+    }
+}
+
+@Preview(name = "Detail — Fehler", showBackground = true)
+@Composable
+private fun ItemDetailErrorPreview() {
+    WorkshopTheme {
+        ItemDetailScaffold(
+            state = ItemDetailState.Error("Artikel nicht gefunden"),
+            onBack = {},
+            onFavoriteClick = {},
+        )
     }
 }
